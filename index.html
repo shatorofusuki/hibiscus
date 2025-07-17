@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yearly Circular Calendar Poster</title>
+    <style>
+        @media print {
+            body {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .calendar-container {
+                page-break-inside: avoid;
+            }
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            padding-left: 320px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .calendar-container {
+            position: relative;
+            width: 1600px;
+            height: 1600px;
+            max-width: 80vw;
+            max-height: 80vh;
+        }
+
+        .calendar-circle {
+            width: 1600px;
+            height: 1600px;
+            border-radius: 50%;
+            background: white;
+            position: relative;
+            overflow: visible;
+        }
+
+        .calendar-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            background: white;
+            padding: 20px;
+            border-radius: 50%;
+        }
+
+        .current-year {
+            font-size: 48px;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
+
+        .days-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease-out;
+        }
+
+        .day {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 500;
+            color: #333;
+            transform-origin: center;
+        }
+
+
+        .day.first-of-month {
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .month-label {
+            position: absolute;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            transform-origin: center;
+        }
+
+
+        .christmas-tree {
+            position: absolute;
+            font-size: 16px;
+            color: #228B22;
+            transform-origin: center;
+            z-index: 5;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #f5f5f5;
+            border-right: 1px solid #ddd;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            z-index: 100;
+            box-sizing: border-box;
+        }
+
+        .sidebar h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .control-group input[type="number"], 
+        .control-group input[type="color"] {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .value-display {
+            font-size: 12px;
+            color: #666;
+            text-align: right;
+        }
+
+        .reset-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .reset-btn:hover {
+            background: #555;
+        }
+
+        .year-buttons {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .year-btn {
+            flex: 1;
+            padding: 8px 4px;
+            border: 1px solid #ccc;
+            background: white;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .year-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .year-btn.active {
+            background: #333;
+            color: white;
+        }
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #333;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .direction-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h3>Calendar Configuration</h3>
+        
+        <div class="control-group">
+            <label>Year:</label>
+            <div class="year-buttons">
+                <button class="year-btn" id="prevYearBtn">2024</button>
+                <button class="year-btn active" id="currentYearBtn">2025</button>
+                <button class="year-btn" id="nextYearBtn">2026</button>
+            </div>
+        </div>
+
+
+        <div class="control-group">
+            <label for="waveAmplitude">Wave Amplitude:</label>
+            <input type="range" id="waveAmplitude" min="-100" max="100" value="10">
+            <div class="value-display" id="waveAmplitudeValue">10px</div>
+        </div>
+
+        <div class="control-group">
+            <label for="circleRadius">Circle Radius:</label>
+            <input type="range" id="circleRadius" min="300" max="1000" value="700">
+            <div class="value-display" id="circleRadiusValue">700px</div>
+        </div>
+
+        <div class="control-group">
+            <label for="fontSize">Day Font Size:</label>
+            <input type="range" id="fontSize" min="8" max="20" value="10">
+            <div class="value-display" id="fontSizeValue">10px</div>
+        </div>
+
+
+        <div class="control-group">
+            <label for="monthFontSize">Month Font Size:</label>
+            <input type="range" id="monthFontSize" min="10" max="24" value="14">
+            <div class="value-display" id="monthFontSizeValue">14px</div>
+        </div>
+
+        <div class="control-group">
+            <label for="centerFontSize">Center Year Size:</label>
+            <input type="range" id="centerFontSize" min="24" max="72" value="48">
+            <div class="value-display" id="centerFontSizeValue">48px</div>
+        </div>
+
+        <div class="control-group">
+            <label for="calendarRotation">Calendar Rotation:</label>
+            <input type="range" id="calendarRotation" min="-180" max="180" value="0" step="15">
+            <div class="value-display" id="calendarRotationValue">0°</div>
+        </div>
+
+        <div class="control-group">
+            <label>Calendar Direction:</label>
+            <div class="switch-container">
+                <span class="direction-label">Clockwise</span>
+                <label class="switch">
+                    <input type="checkbox" id="directionSwitch">
+                    <span class="slider"></span>
+                </label>
+                <span class="direction-label">Counter-clockwise</span>
+            </div>
+        </div>
+
+        <button class="reset-btn" id="saveSvgBtn" style="background: #228B22;">Save as SVG</button>
+    </div>
+
+    <div class="main-content">
+        <div class="calendar-container">
+            <div class="calendar-circle">
+                <div class="calendar-center">
+                    <div class="current-year" id="centerYear"></div>
+                </div>
+                <div class="days-container" id="daysContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class YearlyCircularCalendar {
+            constructor() {
+                this.currentYear = new Date().getFullYear();
+                this.today = new Date();
+                this.monthNames = [
+                    'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+                    'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
+                ];
+                
+                // Default parameters
+                this.params = {
+                    waveFrequency: 12,
+                    waveAmplitude: 10,
+                    circleRadius: 700,
+                    fontSize: 10,
+                    textColor: '#333333',
+                    monthFontSize: 14,
+                    centerFontSize: 48,
+                    rotation: 0,
+                    clockwise: true
+                };
+                
+                this.init();
+            }
+
+            init() {
+                this.updateYearButtons();
+                this.updateDisplay();
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                // Year buttons
+                document.getElementById('prevYearBtn').addEventListener('click', () => {
+                    this.currentYear--;
+                    this.updateYearButtons();
+                    this.updateDisplay();
+                });
+
+                document.getElementById('currentYearBtn').addEventListener('click', () => {
+                    this.currentYear = new Date().getFullYear();
+                    this.updateYearButtons();
+                    this.updateDisplay();
+                });
+
+                document.getElementById('nextYearBtn').addEventListener('click', () => {
+                    this.currentYear++;
+                    this.updateYearButtons();
+                    this.updateDisplay();
+                });
+
+
+                // Wave amplitude
+                document.getElementById('waveAmplitude').addEventListener('input', (e) => {
+                    this.params.waveAmplitude = parseInt(e.target.value);
+                    document.getElementById('waveAmplitudeValue').textContent = e.target.value + 'px';
+                    this.updateDisplay();
+                });
+
+                // Circle radius
+                document.getElementById('circleRadius').addEventListener('input', (e) => {
+                    this.params.circleRadius = parseInt(e.target.value);
+                    document.getElementById('circleRadiusValue').textContent = e.target.value + 'px';
+                    this.updateDisplay();
+                });
+
+                // Font size
+                document.getElementById('fontSize').addEventListener('input', (e) => {
+                    this.params.fontSize = parseInt(e.target.value);
+                    document.getElementById('fontSizeValue').textContent = e.target.value + 'px';
+                    this.updateDisplay();
+                });
+
+
+                // Month font size
+                document.getElementById('monthFontSize').addEventListener('input', (e) => {
+                    this.params.monthFontSize = parseInt(e.target.value);
+                    document.getElementById('monthFontSizeValue').textContent = e.target.value + 'px';
+                    this.updateDisplay();
+                });
+
+                // Center font size
+                document.getElementById('centerFontSize').addEventListener('input', (e) => {
+                    this.params.centerFontSize = parseInt(e.target.value);
+                    document.getElementById('centerFontSizeValue').textContent = e.target.value + 'px';
+                    this.updateDisplay();
+                });
+
+                // Calendar rotation
+                document.getElementById('calendarRotation').addEventListener('input', (e) => {
+                    this.params.rotation = parseInt(e.target.value);
+                    document.getElementById('calendarRotationValue').textContent = e.target.value + '°';
+                    this.updateDisplay();
+                });
+
+                // Direction switch
+                document.getElementById('directionSwitch').addEventListener('change', (e) => {
+                    this.params.clockwise = !e.target.checked;
+                    this.updateDisplay();
+                });
+
+                // Save SVG button
+                document.getElementById('saveSvgBtn').addEventListener('click', () => {
+                    this.saveAsSvg();
+                });
+            }
+
+            updateDisplay() {
+                document.getElementById('centerYear').textContent = this.currentYear;
+                document.getElementById('centerYear').style.fontSize = this.params.centerFontSize + 'px';
+                document.getElementById('centerYear').style.color = this.params.textColor;
+                
+                // Apply rotation transform to the days container for smooth rotation
+                const container = document.getElementById('daysContainer');
+                container.style.transform = `rotate(${this.params.rotation}deg)`;
+                
+                this.renderYear();
+            }
+
+            updateYearButtons() {
+                const actualCurrentYear = new Date().getFullYear();
+                
+                // Update button text to show three consecutive years around the selected year
+                document.getElementById('prevYearBtn').textContent = this.currentYear - 1;
+                document.getElementById('currentYearBtn').textContent = this.currentYear;
+                document.getElementById('nextYearBtn').textContent = this.currentYear + 1;
+                
+                // Remove active class from all buttons
+                document.querySelectorAll('.year-btn').forEach(btn => btn.classList.remove('active'));
+                
+                // Always highlight the middle button since it shows the currently selected year
+                document.getElementById('currentYearBtn').classList.add('active');
+            }
+
+
+            isLeapYear(year) {
+                return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+            }
+
+            getDaysInMonth(month, year) {
+                const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+                if (month === 1 && this.isLeapYear(year)) {
+                    return 29;
+                }
+                return daysInMonth[month];
+            }
+
+            renderYear() {
+                const container = document.getElementById('daysContainer');
+                container.innerHTML = '';
+
+                const centerX = 800;
+                const centerY = 800;
+                const radius = this.params.circleRadius;
+                
+                let totalDays = this.isLeapYear(this.currentYear) ? 366 : 365;
+                
+                // Calculate total "width units" considering two-digit dates need more space
+                let totalWidthUnits = 0;
+                for (let m = 0; m < 12; m++) {
+                    const daysInMonth = this.getDaysInMonth(m, this.currentYear);
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        totalWidthUnits += d >= 10 ? 1.3 : 1; // Two-digit dates get 30% more space
+                    }
+                }
+                
+                let dayCount = 0;
+                let widthUnitCount = 0;
+                
+                // Calculate positions for each month start to align with wave peaks
+                const monthStarts = [];
+                let tempDayCount = 0;
+                for (let m = 0; m < 12; m++) {
+                    monthStarts.push(tempDayCount);
+                    tempDayCount += this.getDaysInMonth(m, this.currentYear);
+                }
+                
+                for (let month = 0; month < 12; month++) {
+                    const daysInMonth = this.getDaysInMonth(month, this.currentYear);
+                    
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        // Use width units instead of day count for more even spacing
+                        let baseAngle = (widthUnitCount * 360 / totalWidthUnits) * (Math.PI / 180) - Math.PI / 2;
+                        if (!this.params.clockwise) {
+                            // Flip around January 1st position by reversing the angle relative to Jan 1st
+                            const jan1Angle = -Math.PI / 2; // January 1st is at top (-90 degrees)
+                            baseAngle = 2 * jan1Angle - baseAngle;
+                        }
+                        const angle = baseAngle; // Remove rotation from calculations since we're using CSS transform
+                        
+                        // Create wavy effect aligned so 1st of each month is at wave peaks
+                        // Calculate wave phase offset so month starts align with peaks (sin = 1)
+                        const monthStartAngle = (monthStarts[month] * 360 / totalDays) * (Math.PI / 180) - Math.PI / 2;
+                        const wavePhaseOffset = (Math.PI / 2) - (monthStartAngle * 12); // 12 waves per year
+                        const waveFrequency = 12; // 12 waves for 12 months
+                        const waveAmplitude = this.params.waveAmplitude;
+                        const wavyRadius = radius + Math.sin(baseAngle * waveFrequency + wavePhaseOffset) * waveAmplitude;
+                        
+                        const x = centerX + wavyRadius * Math.cos(angle) - 12;
+                        const y = centerY + wavyRadius * Math.sin(angle) - 12;
+
+                        const dayElement = document.createElement('div');
+                        dayElement.className = 'day';
+                        dayElement.textContent = day;
+                        dayElement.style.left = x + 'px';
+                        dayElement.style.top = y + 'px';
+                        dayElement.style.fontSize = this.params.fontSize + 'px';
+                        dayElement.style.color = this.params.textColor;
+                        
+                        // Rotate numbers to point toward center
+                        const rotation = (angle * 180 / Math.PI) + 90;
+                        dayElement.style.transform = `rotate(${rotation}deg)`;
+
+                        if (day === 1) {
+                            dayElement.classList.add('first-of-month');
+                            
+                            // Add Christmas tree icon for January 1st
+                            if (month === 0) {
+                                const treeElement = document.createElement('div');
+                                treeElement.className = 'christmas-tree';
+                                treeElement.textContent = '🎄';
+                                
+                                // Position tree slightly outward from January 1st
+                                const treeRadius = wavyRadius + 30;
+                                const treeX = centerX + treeRadius * Math.cos(angle) - 8;
+                                const treeY = centerY + treeRadius * Math.sin(angle) - 8;
+                                
+                                treeElement.style.left = treeX + 'px';
+                                treeElement.style.top = treeY + 'px';
+                                
+                                // Rotate tree to point toward center
+                                const treeRotation = (angle * 180 / Math.PI) + 90;
+                                treeElement.style.transform = `rotate(${treeRotation}deg)`;
+                                
+                                container.appendChild(treeElement);
+                            }
+                        }
+
+
+                        container.appendChild(dayElement);
+                        dayCount++;
+                        widthUnitCount += day >= 10 ? 1.3 : 1; // Increment by width units
+                    }
+
+                    let baseMonthAngle = ((dayCount - this.getDaysInMonth(month, this.currentYear) / 2) * 360 / totalDays) * (Math.PI / 180) - Math.PI / 2;
+                    if (!this.params.clockwise) {
+                        // Flip around January 1st position by reversing the angle relative to Jan 1st
+                        const jan1Angle = -Math.PI / 2; // January 1st is at top (-90 degrees)
+                        baseMonthAngle = 2 * jan1Angle - baseMonthAngle;
+                    }
+                    const monthAngle = baseMonthAngle; // Remove rotation from calculations since we're using CSS transform
+                    
+                    // Position month labels inside the circle
+                    const monthLabelRadius = 650;
+                    const monthX = centerX + monthLabelRadius * Math.cos(monthAngle);
+                    const monthY = centerY + monthLabelRadius * Math.sin(monthAngle);
+
+                    const monthLabel = document.createElement('div');
+                    monthLabel.className = 'month-label';
+                    monthLabel.textContent = this.monthNames[month];
+                    monthLabel.style.left = (monthX - 20) + 'px';
+                    monthLabel.style.top = (monthY - 10) + 'px';
+                    monthLabel.style.fontSize = this.params.monthFontSize + 'px';
+                    monthLabel.style.color = this.params.textColor;
+                    
+                    const rotation = (monthAngle * 180 / Math.PI) + 90;
+                    // Account for the overall calendar rotation when determining if label should flip
+                    const totalRotation = (rotation + this.params.rotation) % 360;
+                    const normalizedRotation = totalRotation < 0 ? totalRotation + 360 : totalRotation;
+                    
+                    if (normalizedRotation > 90 && normalizedRotation < 270) {
+                        monthLabel.style.transform = `rotate(${rotation + 180}deg)`;
+                    } else {
+                        monthLabel.style.transform = `rotate(${rotation}deg)`;
+                    }
+
+                    container.appendChild(monthLabel);
+                }
+            }
+
+            saveAsSvg() {
+                const centerX = 800;
+                const centerY = 800;
+                const radius = this.params.circleRadius;
+                
+                let totalDays = this.isLeapYear(this.currentYear) ? 366 : 365;
+                
+                // Calculate total "width units" considering two-digit dates need more space
+                let totalWidthUnits = 0;
+                for (let m = 0; m < 12; m++) {
+                    const daysInMonth = this.getDaysInMonth(m, this.currentYear);
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        totalWidthUnits += d >= 10 ? 1.3 : 1; // Two-digit dates get 30% more space
+                    }
+                }
+                
+                let dayCount = 0;
+                let widthUnitCount = 0;
+                
+                // Start SVG content
+                let svgContent = `<svg width="1600" height="1600" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="none" stroke="none"/>
+                    
+                    <!-- Center year -->
+                    <text x="${centerX}" y="${centerY}" text-anchor="middle" dominant-baseline="central" 
+                          font-family="Arial" font-size="${this.params.centerFontSize}" font-weight="bold" 
+                          fill="${this.params.textColor}">${this.currentYear}</text>
+                `;
+
+                // Calculate month starts for wave alignment
+                const monthStarts = [];
+                let tempDayCount = 0;
+                for (let m = 0; m < 12; m++) {
+                    monthStarts.push(tempDayCount);
+                    tempDayCount += this.getDaysInMonth(m, this.currentYear);
+                }
+                
+                // Add days
+                for (let month = 0; month < 12; month++) {
+                    const daysInMonth = this.getDaysInMonth(month, this.currentYear);
+                    
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        // Use width units instead of day count for more even spacing
+                        let baseAngle = (widthUnitCount * 360 / totalWidthUnits) * (Math.PI / 180) - Math.PI / 2;
+                        if (!this.params.clockwise) {
+                            const jan1Angle = -Math.PI / 2;
+                            baseAngle = 2 * jan1Angle - baseAngle;
+                        }
+                        const angle = baseAngle + (this.params.rotation * Math.PI / 180); // Keep rotation for SVG export
+                        
+                        // Wave effect
+                        const monthStartAngle = (monthStarts[month] * 360 / totalDays) * (Math.PI / 180) - Math.PI / 2;
+                        const wavePhaseOffset = (Math.PI / 2) - (monthStartAngle * 12);
+                        const waveFrequency = 12;
+                        const waveAmplitude = this.params.waveAmplitude;
+                        const wavyRadius = radius + Math.sin(baseAngle * waveFrequency + wavePhaseOffset) * waveAmplitude;
+                        
+                        const x = centerX + wavyRadius * Math.cos(angle);
+                        const y = centerY + wavyRadius * Math.sin(angle);
+                        
+                        const rotation = (angle * 180 / Math.PI) + 90;
+                        const fontSize = day === 1 ? this.params.fontSize + 1 : this.params.fontSize;
+                        const fontWeight = day === 1 ? 'bold' : '500';
+                        
+                        svgContent += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" 
+                                       font-family="Arial" font-size="${fontSize}" font-weight="${fontWeight}" 
+                                       fill="${this.params.textColor}" 
+                                       transform="rotate(${rotation} ${x} ${y})">${day}</text>`;
+
+                        // Add Christmas tree for January 1st
+                        if (month === 0 && day === 1) {
+                            const treeRadius = wavyRadius + 30;
+                            const treeX = centerX + treeRadius * Math.cos(angle);
+                            const treeY = centerY + treeRadius * Math.sin(angle);
+                            const treeRotation = (angle * 180 / Math.PI) + 90;
+                            
+                            svgContent += `<text x="${treeX}" y="${treeY}" text-anchor="middle" dominant-baseline="central" 
+                                           font-size="16" fill="#228B22" 
+                                           transform="rotate(${treeRotation} ${treeX} ${treeY})">🎄</text>`;
+                        }
+                        
+                        dayCount++;
+                        widthUnitCount += day >= 10 ? 1.3 : 1; // Increment by width units
+                    }
+
+                    // Add month labels
+                    let baseMonthAngle = ((dayCount - this.getDaysInMonth(month, this.currentYear) / 2) * 360 / totalDays) * (Math.PI / 180) - Math.PI / 2;
+                    if (!this.params.clockwise) {
+                        const jan1Angle = -Math.PI / 2;
+                        baseMonthAngle = 2 * jan1Angle - baseMonthAngle;
+                    }
+                    const monthAngle = baseMonthAngle + (this.params.rotation * Math.PI / 180); // Keep rotation for SVG export
+                    
+                    const monthLabelRadius = 650;
+                    const monthX = centerX + monthLabelRadius * Math.cos(monthAngle);
+                    const monthY = centerY + monthLabelRadius * Math.sin(monthAngle);
+                    
+                    let rotation = (monthAngle * 180 / Math.PI) + 90;
+                    if (rotation > 90 && rotation < 270) {
+                        rotation += 180;
+                    }
+                    
+                    svgContent += `<text x="${monthX}" y="${monthY}" text-anchor="middle" dominant-baseline="central" 
+                                   font-family="Arial" font-size="${this.params.monthFontSize}" font-weight="bold" 
+                                   fill="${this.params.textColor}" 
+                                   transform="rotate(${rotation} ${monthX} ${monthY})">${this.monthNames[month]}</text>`;
+                }
+                
+                svgContent += '</svg>';
+                
+                // Download the SVG
+                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `circular-calendar-${this.currentYear}.svg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new YearlyCircularCalendar();
+        });
+    </script>
+</body>
+</html>
